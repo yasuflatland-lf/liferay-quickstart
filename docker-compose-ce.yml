@@ -1,0 +1,44 @@
+version: '3.7'
+services:
+  mysql:
+    image: mysql:5.7
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+      - "33060:33060"
+    volumes:
+      # Data initialize script trigger directory. place initialize file under the mysql_init directory.
+      - ./db/mysql_init:/docker-entrypoint-initdb.d
+      # persistent data directory
+      - ./db/mysql_data:/var/lib/mysql
+      # configuration file
+      - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: test
+      MYSQL_PASSWORD: password
+  liferay:
+    image: liferay/portal:7.3.5-ga6
+    depends_on:
+      - mysql
+    environment:
+      - LCP_PROJECT_ENVIRONMENT=local
+      - LCP_PROJECT_ID=local
+      - LIFERAY_JPDA_ENABLED=true
+      - LIFERAY_MODULE_PERIOD_FRAMEWORK_PERIOD_PROPERTIES_PERIOD_OSGI_PERIOD_CONSOLE=0.0.0.0:11311
+      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_DRIVER_UPPERCASEC_LASS_UPPERCASEN_AME=com.mysql.cj.jdbc.Driver
+      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_USERNAME=root
+      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD=password
+      - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_URL=jdbc:mysql://mysql/lrportal_ce?connectionCollation=utf8mb4_bin&dontTrackOpenResources=true&holdResultsOpenOverStatementClose=true&serverTimezone=GMT&useFastDateParsing=false&useUnicode=true&characterEncoding=utf8
+      - LIFERAY_DISABLE_TRIAL_LICENSE=false
+      - LIFERAY_SETUP_PERIOD_WIZARD_PERIOD_ENABLED=false
+      - LIFERAY_TERMS_PERIOD_OF_PERIOD_USE_PERIOD_REQUIRED="false
+      - LIFERAY_USERS_PERIOD_REMINDER_PERIOD_QUERIES_PERIOD_ENABLED=false
+      - LIFERAY_USERS_PERIOD_REMINDER_PERIOD_QUERIES_PERIOD_CUSTOM_PERIOD_QUESTION_PERIOD_ENABLED=false
+    ports:
+      - "8080:8080"
+      - "11311:11311"
+    volumes:
+      - ./liferay/files:/mnt/liferay/files
+      - ./liferay/deploy:/mnt/liferay/deploy
+      - ./liferay/files/data/document_library:/mnt/liferay/files/data/document_library
